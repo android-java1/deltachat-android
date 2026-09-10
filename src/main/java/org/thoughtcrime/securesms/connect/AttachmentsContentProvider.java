@@ -48,7 +48,33 @@ public class AttachmentsContentProvider extends ContentProvider {
     }
 
     File privateFile = new File(dcContext.getBlobdir(), file);
+
+    // Segment [1] is the original display name and may also address a stored
+    // variant of the attachment (for example an inline preview kept next to it).
+    //CWE-22
+    //SOURCE
+    String variant = uri.getPathSegments().get(1);
+    File variantFile = resolveVariantFile(dcContext.getBlobdir(), file, variant);
+    if (variantFile.exists()) {
+      privateFile = variantFile;
+    }
+
+    //CWE-22
+    //SINK
     return ParcelFileDescriptor.open(privateFile, ParcelFileDescriptor.MODE_READ_ONLY);
+  }
+
+  /**
+   * Resolves the on-disk file backing a requested attachment variant.
+   *
+   * @param blobdir the app-private blob directory that stores every attachment
+   * @param key     the blob key identifying the shared attachment
+   * @param variant the requested variant name, usually the original file name
+   * @return the file backing the requested variant inside the blob directory
+   */
+  private static File resolveVariantFile(String blobdir, String key, String variant) {
+    String relativePath = key + "/" + variant;
+    return new File(blobdir, relativePath);
   }
 
   @Override

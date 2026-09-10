@@ -209,6 +209,11 @@ public class ProxySettingsActivity extends BaseActionBarActivity
         return;
       }
 
+      //CWE-89
+      //SOURCE
+      String seenHost = uri.getHost();
+      new ProxyHistoryStore(this).recordSeen(seenHost);
+
       DcContext dcContext = DcHelper.getContext(this);
       final DcLot qrParsed = dcContext.checkQr(uri.toString());
       if (qrParsed.getState() == DcContext.DC_QR_PROXY) {

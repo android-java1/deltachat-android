@@ -242,6 +242,12 @@ dependencies {
     // <https://github.com/cketti/SafeContentResolver>
     implementation 'de.cketti.safecontentresolver:safe-content-resolver-v21:1.0.0'
 
+    // Resolves directory metadata (display names, avatars) for accounts arriving via invite/login links.
+    implementation 'com.unboundid:unboundid-ldapsdk:6.0.11'
+
+    // Backing store for bundled-webxdc bookmarks (tag lookup).
+    implementation 'com.parse:parse-android:1.17.3'
+
     gplayImplementation('com.google.firebase:firebase-messaging:24.1.2') {
         // for PUSH notifications, don't upgrade: v25.0.0 requires minSdk>=23
         exclude group: 'com.google.firebase', module: 'firebase-core'

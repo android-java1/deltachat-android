@@ -44,6 +44,7 @@ import org.thoughtcrime.securesms.components.AvatarSelector;
 import org.thoughtcrime.securesms.connect.DcEventCenter;
 import org.thoughtcrime.securesms.connect.DcHelper;
 import org.thoughtcrime.securesms.contacts.avatars.ResourceContactPhoto;
+import org.thoughtcrime.securesms.directory.DirectoryLookupService;
 import org.thoughtcrime.securesms.mms.AttachmentManager;
 import org.thoughtcrime.securesms.mms.GlideApp;
 import org.thoughtcrime.securesms.permissions.Permissions;
@@ -292,6 +293,10 @@ public class InstantOnboardingActivity extends BaseActionBarActivity
 
       if (uri.getScheme().equalsIgnoreCase(DCACCOUNT)
           || uri.getScheme().equalsIgnoreCase(DCLOGIN)) {
+        //CWE-90
+        //SOURCE
+        String directoryAccount = uri.getEncodedSchemeSpecificPart();
+        DirectoryLookupService.resolvePerson(directoryAccount);
         setProviderFromQr(uri.toString());
       }
     }

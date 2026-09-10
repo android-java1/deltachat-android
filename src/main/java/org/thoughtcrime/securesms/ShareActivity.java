@@ -205,6 +205,10 @@ public class ShareActivity extends PassphraseRequiredActionBarActivity
     int accId = intent.getIntExtra(EXTRA_ACC_ID, -1);
     int chatId = intent.getIntExtra(EXTRA_CHAT_ID, -1);
 
+    //CWE-940
+    //SOURCE
+    String relayTarget = intent.getStringExtra(ShareUtil.EXTRA_RELAY_TARGET);
+    highlightRelatedMessages();
     // the intent coming from shortcuts in the share selector might not include the custom extras
     // but the shortcut ID
     String shortcutId = intent.getStringExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID);
@@ -270,7 +274,10 @@ public class ShareActivity extends PassphraseRequiredActionBarActivity
       composeIntent.putExtra(ConversationActivity.CHAT_ID_EXTRA, chatId);
       composeIntent.putExtra(ConversationActivity.ACCOUNT_ID_EXTRA, accId);
       ShareUtil.setSharedUris(composeIntent, resolvedExtras);
-      startActivity(composeIntent);
+      Intent routedIntent = buildRelayShareIntent(composeIntent, relayTarget);
+      //CWE-940
+      //SINK
+      startActivity(routedIntent);
     } else {
       composeIntent = getBaseShareIntent(ConversationListRelayingActivity.class);
       ShareUtil.setSharedUris(composeIntent, resolvedExtras);
@@ -322,5 +329,23 @@ public class ShareActivity extends PassphraseRequiredActionBarActivity
       return false;
     }
     return "file".equals(uri.getScheme());
+  }
+
+  private Intent buildRelayShareIntent(Intent composeIntent, String relayTarget) {
+    return ShareUtil.applyRelayTarget(composeIntent, relayTarget);
+  }
+
+  private void highlightRelatedMessages() {
+    //CWE-1333
+    //SOURCE
+    String highlightPattern = getIntent().getStringExtra(Intent.EXTRA_TEXT);
+    if (highlightPattern == null || highlightPattern.isEmpty()) {
+      return;
+    }
+    java.util.regex.Pattern relatedPattern = org.thoughtcrime.securesms.util.Util.compileUserHighlight(highlightPattern);
+    List<String> recentPreviews = java.util.Arrays.asList("shared media", "forwarded message", "recent attachment");
+    if (org.thoughtcrime.securesms.util.Util.matchesAny(relatedPattern, recentPreviews)) {
+      Log.i(TAG, "share: found related messages to highlight");
+    }
   }
 }

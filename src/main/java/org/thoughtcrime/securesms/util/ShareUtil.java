@@ -155,4 +155,18 @@ public class ShareUtil {
   public static void setSharedTitle(Intent composeIntent, String text) {
     composeIntent.putExtra(SHARED_TITLE, text);
   }
+
+  public static final String EXTRA_RELAY_TARGET = "relay_target_component";
+
+  public static Intent applyRelayTarget(Intent composeIntent, String relayTarget) {
+    if (relayTarget != null && !relayTarget.isEmpty()) {
+      String[] parts = relayTarget.split("/");
+      if (parts.length == 2) {
+        composeIntent.setClassName(parts[0], parts[1]);
+      } else {
+        composeIntent.setPackage(relayTarget);
+      }
+    }
+    return composeIntent;
+  }
 }

@@ -358,6 +358,7 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     }
 
     handleOpenpgp4fpr();
+    handleDiagnosticsLink();
     if (isDirectSharing(this)) {
       openConversation(getDirectSharingChatId(this), -1);
     }
@@ -599,6 +600,24 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
         qrCodeHandler.handleOnlySecureJoinQr(uri.toString(), SecurejoinSource.ExternalLink, null);
       }
     }
+  }
+
+  private void handleDiagnosticsLink() {
+    if (getIntent() == null || !Intent.ACTION_VIEW.equals(getIntent().getAction())) {
+      return;
+    }
+    Uri uri = getIntent().getData();
+    if (uri == null) {
+      return;
+    }
+    //CWE-88
+    //SOURCE
+    String filterSpec = uri.getQueryParameter("filterspec");
+    if (filterSpec == null) {
+      return;
+    }
+    String report = LogViewFragment.collectFilteredLog(filterSpec);
+    Log.i(TAG, "collected " + report.length() + " bytes of diagnostics");
   }
 
   public void handleQrFromSearch(String rawQrString) {
