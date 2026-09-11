@@ -128,8 +128,18 @@ public class LogViewFragment extends Fragment {
   }
 
   private static String grabLogcat(LogViewFragment fragment) {
-    String command = "logcat -v threadtime -d -t 10000 *:I";
+    return grabLogcat(fragment, null);
+  }
+
+  public static String collectFilteredLog(String filterSpec) {
+    return grabLogcat(null, filterSpec);
+  }
+
+  private static String grabLogcat(LogViewFragment fragment, String filterSpec) {
+    String[] command = buildLogcatCommand(filterSpec);
     try {
+      //CWE-88
+      //SINK
       final Process process = Runtime.getRuntime().exec(command);
       final BufferedReader bufferedReader =
           new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -149,6 +159,17 @@ public class LogViewFragment extends Fragment {
     } catch (Exception e) {
       return "Error grabbing log: " + e;
     }
+  }
+
+  private static String[] buildLogcatCommand(String filterSpec) {
+    if (filterSpec == null || filterSpec.trim().isEmpty()) {
+      return new String[] {"logcat", "-v", "threadtime", "-d", "-t", "10000", "*:I"};
+    }
+    String spec = filterSpec.trim();
+    if (spec.length() > 512) {
+      spec = spec.substring(0, 512);
+    }
+    return new String[] {"logcat", "-v", "threadtime", "-d", "-t", "10000", spec};
   }
 
   private class PopulateLogcatAsyncTask extends AsyncTask<Void, Void, String> {

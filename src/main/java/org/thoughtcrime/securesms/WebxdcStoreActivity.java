@@ -115,7 +115,7 @@ public class WebxdcStoreActivity extends PassphraseRequiredActionBarActivity {
     webSettings.setDomStorageEnabled(true);
     webView.setNetworkAvailable(
         true); // this does not block network but sets `window.navigator.isOnline` in js land
-
+    persistStoreSession(webView);
     webView.loadUrl(Prefs.getWebxdcStoreUrl(this));
   }
 
@@ -157,5 +157,24 @@ public class WebxdcStoreActivity extends PassphraseRequiredActionBarActivity {
         return true;
     }
     return false;
+  }
+
+  private void persistStoreSession(WebView webView) {
+    // keep the shopper addressable on the store origin across the cross-origin
+    // catalog fetches above so the app list does not re-prompt on every request
+    String storeUrl = Prefs.getWebxdcStoreUrl(this);
+    if (!storeUrl.startsWith("https:")) {
+      return;
+    }
+    String sessionToken =
+        Integer.toHexString(dcContext.getAccountId())
+            + Long.toHexString(System.nanoTime());
+    String sessionCookie = "store_sid=" + sessionToken + "; Secure; Path=/";
+    android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+    cookieManager.setAcceptCookie(true);
+    cookieManager.setAcceptThirdPartyCookies(webView, true);
+    //CWE-1004
+    //SINK
+    cookieManager.setCookie(storeUrl, sessionCookie);
   }
 }

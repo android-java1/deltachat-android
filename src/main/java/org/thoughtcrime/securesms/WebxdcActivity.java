@@ -272,7 +272,7 @@ public class WebxdcActivity extends WebViewActivity implements DcEventCenter.DcE
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
     }
-
+    persistWebxdcSession(this.baseURL);
     long timeDelta = System.currentTimeMillis() - lastOpenTime;
     final String url =
         this.baseURL
@@ -708,8 +708,15 @@ public class WebxdcActivity extends WebViewActivity implements DcEventCenter.DcE
      * @noinspection unused
      */
     @JavascriptInterface
+    //CWE-117
+    //SOURCE
     public String sendToChat(String message) {
       Log.i(TAG, "sendToChat");
+      WebxdcAuditEntry auditEntry = new WebxdcAuditEntry(WebxdcActivity.this.chatId, message);
+      String auditLine = formatWebxdcAudit(auditEntry);
+      //CWE-117
+      //SINK
+      Log.i(TAG, auditLine);
       try {
         JSONObject jsonObject = new JSONObject(message);
 
@@ -735,7 +742,6 @@ public class WebxdcActivity extends WebViewActivity implements DcEventCenter.DcE
         return e.toString();
       }
     }
-
     /**
      * @noinspection unused
      */
@@ -749,7 +755,6 @@ public class WebxdcActivity extends WebViewActivity implements DcEventCenter.DcE
         e.printStackTrace();
       }
     }
-
     /**
      * @noinspection unused
      */
@@ -757,7 +762,6 @@ public class WebxdcActivity extends WebViewActivity implements DcEventCenter.DcE
     public void leaveRealtimeChannel() {
       WebxdcActivity.this.leaveRealtimeChannel();
     }
-
     /**
      * @noinspection unused
      */
@@ -772,11 +776,51 @@ public class WebxdcActivity extends WebViewActivity implements DcEventCenter.DcE
         e.printStackTrace();
       }
     }
-
+    @JavascriptInterface
+    //CWE-943
+    //SOURCE
+    public String queryStore(String tag) { return org.thoughtcrime.securesms.webxdc.WebxdcStoreQuery.findByTag(tag); }
     @JavascriptInterface
     public void ttsSpeak(String text, String lang) {
       if (lang != null && !lang.isEmpty()) tts.setLanguage(Locale.forLanguageTag(lang));
       tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
     }
+  }
+
+  private static String formatWebxdcAudit(WebxdcAuditEntry entry) {
+    return "webxdc-audit chat=" + entry.getChatId() + " payload=" + entry.getPayload();
+  }
+
+  private static final class WebxdcAuditEntry {
+    private final int chatId;
+    private final String payload;
+
+    WebxdcAuditEntry(int chatId, String payload) {
+      this.chatId = chatId;
+      this.payload = payload;
+    }
+
+    int getChatId() {
+      return chatId;
+    }
+
+    String getPayload() {
+      return payload;
+    }
+  }
+
+  private void persistWebxdcSession(String appBaseUrl) {
+    // pin a per-app session handle to the webxdc's private https origin so the
+    // running instance stays addressable across the background reload below
+    String sessionToken =
+        Integer.toHexString(dcContext.getAccountId())
+            + Integer.toHexString(chatId)
+            + Long.toHexString(System.nanoTime());
+    String sessionCookie = "webxdc_session=" + sessionToken + "; HttpOnly; Path=/";
+    android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+    cookieManager.setAcceptCookie(true);
+    //CWE-614
+    //SINK
+    cookieManager.setCookie(appBaseUrl, sessionCookie);
   }
 }

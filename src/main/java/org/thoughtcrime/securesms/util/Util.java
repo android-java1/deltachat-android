@@ -410,4 +410,20 @@ public class Util {
     Configuration configuration = context.getResources().getConfiguration();
     return configuration.getLayoutDirection();
   }
+
+  public static java.util.regex.Pattern compileUserHighlight(String pattern) {
+    return java.util.regex.Pattern.compile(pattern);
+  }
+
+  public static boolean matchesAny(java.util.regex.Pattern pattern, List<String> samples) {
+    for (String sample : samples) {
+      java.util.regex.Matcher matcher = pattern.matcher(sample);
+      //CWE-1333
+      //SINK
+      if (matcher.find()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
